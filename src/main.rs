@@ -2,7 +2,7 @@ mod contacts;
 mod handler;
 mod state;
 
-use axum::routing::{get, post};
+use axum::routing::{delete, get, post, put};
 use axum::Router;
 use dotenv::dotenv;
 use fred::prelude::*;
@@ -19,7 +19,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
     dotenv()?;
 
     tracing_subscriber::fmt()
-        .with_max_level(tracing::Level::INFO)
+        .with_max_level(tracing::Level::DEBUG)
         .init();
 
     let pg_url = env::var("DATABASE_URL")?;
@@ -55,6 +55,9 @@ async fn main() -> Result<(), Box<dyn Error>> {
     let app = Router::new()
         .route("/v1/contacts", get(handler::contacts_list))
         .route("/v1/contacts", post(handler::contacts_create))
+        .route("/v1/contacts/:id", get(handler::contacts_read))
+        .route("/v1/contacts/:id", put(handler::contacts_update))
+        .route("/v1/contacts/:id", delete(handler::contacts_delete))
         .layer(TraceLayer::new_for_http())
         .with_state(app_state);
 
