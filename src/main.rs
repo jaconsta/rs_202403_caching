@@ -1,5 +1,8 @@
+mod contacts;
+mod handler;
 mod state;
 
+use axum::routing::{get, post};
 use axum::Router;
 use dotenv::dotenv;
 use fred::prelude::*;
@@ -31,6 +34,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
 
     let redis_pool_size = 8;
     let redis_config = RedisConfig::from_url(&redis_url)?;
+
     sqlx::migrate!().run(&dbpool).await?;
 
     let redis_pool = Builder::from_config(redis_config)
@@ -49,6 +53,8 @@ async fn main() -> Result<(), Box<dyn Error>> {
     let app_state = Arc::new(StateInternal::new(dbpool, redis_pool));
 
     let app = Router::new()
+        .route("/v1/contacts", get(handler::contacts_list))
+        .route("/v1/contacts", post(handler::contacts_create))
         .layer(TraceLayer::new_for_http())
         .with_state(app_state);
 

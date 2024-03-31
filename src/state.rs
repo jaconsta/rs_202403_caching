@@ -25,3 +25,5 @@ impl Cache {
         Cache { redis }
     }
 }
+
+pub type AppState = std::sync::Arc<StateInternal>;
