@@ -24,6 +24,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
 
     let pg_url = env::var("DATABASE_URL")?;
     let redis_url = env::var("REDIS_URL")?;
+    let flush_cache = env::var("REDIS_FLUSH_CACHE")?;
     let server_url = "0.0.0.0:3000";
 
     let dbpool = PgPoolOptions::new()
@@ -49,6 +50,10 @@ async fn main() -> Result<(), Box<dyn Error>> {
         .init()
         .await
         .expect("Redis connection. Fail to connect");
+
+    if flush_cache == "TRUE" {
+        let _ = redis_pool.flushall::<i32>(false).await;
+    }
 
     let app_state = Arc::new(StateInternal::new(dbpool, redis_pool));
 

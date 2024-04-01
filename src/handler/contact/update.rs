@@ -1,3 +1,4 @@
+use fred::types::{Expiration, SetOptions};
 use serde::Deserialize;
 
 use crate::{contacts::Contact, state::AppState};
@@ -26,6 +27,21 @@ pub async fn update_by_id(
         .bind(id)
         .fetch_optional(&state.database)
         .await?;
+
+    if let Some(contact) = &res {
+        let contact = contact.clone();
+        let state = state.clone();
+        tokio::spawn(async move {
+            // Write through caching.
+            let _ = state.cache.set(
+                id,
+                &contact,
+                Some(Expiration::EX(60)),
+                Some(SetOptions::XX), // Only if key exists
+                false,
+            );
+        });
+    }
 
     Ok(res)
 }
